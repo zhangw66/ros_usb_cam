@@ -268,7 +268,7 @@ public:
 
 int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "usb_cam");
+  ros::init(argc, argv, "", ros::init_options::AnonymousName);
   usb_cam::UsbCamNode a;
   a.spin();
   return EXIT_SUCCESS;
