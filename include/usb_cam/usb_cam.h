@@ -63,6 +63,12 @@ class UsbCam {
  public:
   typedef enum
   {
+    WORKING_MODE_NORMAL,
+    WORKING_MODE_SNAPSHOT,
+    WORKING_MODE_UNKNOWN,
+  } working_mode;
+  typedef enum
+  {
     IO_METHOD_READ, IO_METHOD_MMAP, IO_METHOD_USERPTR, IO_METHOD_UNKNOWN,
   } io_method;
 
@@ -75,7 +81,7 @@ class UsbCam {
   ~UsbCam();
 
   // start camera
-  void start(const std::string& dev, io_method io, pixel_format pf,
+  void start(const std::string& dev, io_method io, working_mode mode, pixel_format pf,
 		    int image_width, int image_height, int framerate);
   // shutdown camera
   void shutdown(void);
@@ -91,6 +97,7 @@ class UsbCam {
   void set_v4l_parameter(const std::string& param, const std::string& value);
 
   static io_method io_method_from_string(const std::string& str);
+  static working_mode working_mode_from_string(const std::string &str);
   static pixel_format pixel_format_from_string(const std::string& str);
 
   void stop_capturing(void);
@@ -119,11 +126,12 @@ class UsbCam {
   void mjpeg2rgb(char *MJPEG, int len, char *RGB, int NumPixels);
   void process_image(const void * src, int len, camera_image_t *dest);
   int read_frame();
+  int init_working_mode(working_mode mode);
   void uninit_device(void);
   void init_read(unsigned int buffer_size);
   void init_mmap(void);
   void init_userp(unsigned int buffer_size);
-  void init_device(int image_width, int image_height, int framerate);
+  void init_device(int image_width, int image_height, int framerate, working_mode mode = WORKING_MODE_NORMAL);
   void close_device(void);
   void open_device(void);
   void grab_image();
@@ -134,6 +142,7 @@ class UsbCam {
   unsigned int pixelformat_;
   bool monochrome_;
   io_method io_;
+  working_mode mode_;
   int fd_;
   buffer * buffers_;
   unsigned int n_buffers_;

@@ -54,7 +54,7 @@ public:
   image_transport::CameraPublisher image_pub_;
 
   // parameters
-  std::string video_device_name_, io_method_name_, pixel_format_name_, camera_name_, camera_info_url_;
+  std::string video_device_name_, io_method_name_, pixel_format_name_, camera_name_, camera_info_url_, uvc_working_mode_;
   //std::string start_service_name_, start_service_name_;
   bool streaming_status_;
   int image_width_, image_height_, framerate_, exposure_, brightness_, contrast_, saturation_, sharpness_, focus_,
@@ -90,6 +90,7 @@ public:
 
     // grab the parameters
     node_.param("video_device", video_device_name_, std::string("/dev/video0"));
+    node_.param("working_mode", uvc_working_mode_, std::string("normal"));
     node_.param("brightness", brightness_, -1); //0-255, -1 "leave alone"
     node_.param("contrast", contrast_, -1); //0-255, -1 "leave alone"
     node_.param("saturation", saturation_, -1); //0-255, -1 "leave alone"
@@ -146,6 +147,14 @@ public:
       return;
     }
 
+    // set the working mode
+    UsbCam::working_mode mode = UsbCam::working_mode_from_string(uvc_working_mode_);
+    if (mode == UsbCam::WORKING_MODE_UNKNOWN)
+    {
+      ROS_FATAL("Unknown working mode '%d %s'", mode, uvc_working_mode_.c_str());
+      node_.shutdown();
+      return;
+    }
     // set the pixel format
     UsbCam::pixel_format pixel_format = UsbCam::pixel_format_from_string(pixel_format_name_);
     if (pixel_format == UsbCam::PIXEL_FORMAT_UNKNOWN)
@@ -156,7 +165,7 @@ public:
     }
 
     // start the camera
-    cam_.start(video_device_name_.c_str(), io_method, pixel_format, image_width_,
+    cam_.start(video_device_name_.c_str(), io_method, mode, pixel_format, image_width_,
 		     image_height_, framerate_);
 
     // set camera parameters
